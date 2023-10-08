@@ -1,0 +1,8 @@
+{
+    "NotebookApp": {
+      "nbserver_extensions": {
+        "jupyter_http_over_ws": true
+      },
+      "token": "1b0a9bf18768c6224aa65b7379984803784eeb2c06fc7e99"
+    }
+}

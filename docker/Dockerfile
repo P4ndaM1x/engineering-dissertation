@@ -6,5 +6,6 @@ COPY requirements.txt requirements.txt
 
 RUN python3 -m pip install --upgrade pip
 RUN pip install -r requirements.txt
+RUN sed -i '6 i ,"token": "1b0a9bf18768c6224aa65b7379984803784eeb2c06fc7e99"' /root/.jupyter/jupyter_notebook_config.json
 
 EXPOSE 8888

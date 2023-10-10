@@ -1,1 +1,4 @@
 cvnn[full]
+tensorflow-addons
+keras-tuner
+numba

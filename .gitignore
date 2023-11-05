@@ -1,3 +1,10 @@
+/proccessed_data/*
+!proccessed_data/particles_bundler.ipynb
+
+/trained_models/*
+!/trained_models/hp_file_extractor.ipynb
+
 /externals/
+/keras_tuner/
 __pycache__/
 *.pdf

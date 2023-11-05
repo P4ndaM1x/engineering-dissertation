@@ -3,13 +3,14 @@ import csv
 import numpy as np
 
 from common.utils import make_dataframe
+# from tensorflow.keras.optimizers import SGD
 
 class ConfigsTester:
-    def __init__(self, spacepoints_number_space, hiddenlayers_number_space, layer_neurons_number_space, layer_activation_func_space, metric = 'loss', tail_size = 20, save_path='/host/dissertation/trained_models/'):
+    def __init__(self, spacepoints_number_space, hiddenlayers_number_space, hiddenlayers_neurons_number_space, hiddenlayers_activation_func_space, outputlayer_activation_func_space, metric = 'loss', tail_size = 20, save_path='/host/dissertation/trained_models/'):
         
         import itertools
-        self.config_space = list(itertools.product(spacepoints_number_space,hiddenlayers_number_space,layer_neurons_number_space,layer_activation_func_space))
-        self.param = {'spacepoints_number': 0, 'hidden_layers': 1, 'neurons_num': 2, 'activation_func': 3}
+        self.config_space = list(itertools.product(spacepoints_number_space,hiddenlayers_number_space,hiddenlayers_neurons_number_space,hiddenlayers_activation_func_space, outputlayer_activation_func_space))
+        self.param = {'spacepoints_number': 0, 'hidden_layers': 1, 'neurons_num': 2, 'hidden_activation_func': 3, 'output_activation_func': 4}
         
         import os
         self.WORKING_DIR = save_path + f'{int(time.time())}/'
@@ -31,19 +32,19 @@ class ConfigsTester:
         return str(config).translate(str.maketrans(',','-'," '()"))
     @staticmethod
     def get_historyfile_subpath(config):
-        return 'history/' + get_config_string(config) + '-history.csv'
+        return 'history/' + ConfigsTester.get_config_string(config) + '-history.csv'
     @staticmethod
     def get_weightsfile_subpath(config):
-        return 'weights/' + get_config_string(config) + '-weights.h5'
+        return 'weights/' + ConfigsTester.get_config_string(config) + '-weights.h5'
     
     def append_hp_file(self, config, history_df):
-        val_metric_tail = df[f'val_{self.metric}'][-self.tail_size:]
-        metric_tail = df[self.metric][-self.tail_size:]
+        val_metric_tail = history_df[f'val_{self.metric}'][-self.tail_size:]
+        metric_tail = history_df[self.metric][-self.tail_size:]
         
         with open(self.HP_FILEPATH, 'a', newline='') as f:
-            csv.writer(f).writerow([get_config_string(hp_config),time.strftime("%H:%M:%S", time.localtime()),np.average(val_metric_tail),np.median(val_metric_tail),np.std(val_metric_tail),np.max(metric_tail),np.min(metric_tail)])
+            csv.writer(f).writerow([self.get_config_string(config),time.strftime("%H:%M:%S", time.localtime()),np.average(val_metric_tail),np.median(val_metric_tail),np.std(val_metric_tail),np.max(metric_tail),np.min(metric_tail)])
     
-    def test_configs(self, y_data, output_layer, optimizer, loss, epochs, callbacks=[], verbose=True, x_data_dir = '/host/dissertation/proccessed_data/'):
+    def test_configs(self, y_data, optimizer_factory, loss, epochs, callbacks=[], verbose=True, x_data_dir = '/host/dissertation/proccessed_data/'):
         import cvnn.layers as complex_layers
         from tensorflow.keras.models import Sequential
         for config in self.config_space:
@@ -52,12 +53,12 @@ class ConfigsTester:
             model = Sequential()
             model.add(complex_layers.ComplexInput(input_shape=(config[self.param['spacepoints_number']],)))
             for layer_no in range(config[self.param['hidden_layers']]):
-                model.add(complex_layers.ComplexDense(units=config[self.param['neurons_num']], activation=config[self.param['activation_func']]))
-            model.add(output_layer)
+                model.add(complex_layers.ComplexDense(units=config[self.param['neurons_num']], activation=config[self.param['hidden_activation_func']]))
+            model.add(complex_layers.ComplexDense(units=np.shape(y_data)[-1], activation=config[self.param['output_activation_func']]))
             if self.metric != 'loss':
-                model.compile(optimizer=optimizer, loss=loss, metrics=[self.metric])
+                model.compile(optimizer=optimizer_factory(), loss=loss, metrics=[self.metric])
             else:
-                model.compile(optimizer=optimizer, loss=loss)
+                model.compile(optimizer=optimizer_factory(), loss=loss)
                 
             print('      model compiled')
             points = np.load(x_data_dir + 'points_' + str(config[self.param['spacepoints_number']]) + '.npy')
@@ -65,11 +66,11 @@ class ConfigsTester:
             history = model.fit(points, y_data, epochs=epochs, validation_split=0.2, verbose=0, callbacks=callbacks)
             print('      model trained')
             df = make_dataframe(history)
-            append_hp_file(config, df)
+            self.append_hp_file(config, df)
             print('      hp_file appended')
-            df.to_csv(self.WORKING_DIR + get_historyfile_subpath(config), index=False)
+            df.to_csv(self.WORKING_DIR + self.get_historyfile_subpath(config), index=False)
             print('      history saved')
-            model.save_weights(self.WORKING_DIR + get_weightsfile_subpath(config), save_format='h5')
+            model.save_weights(self.WORKING_DIR + self.get_weightsfile_subpath(config), save_format='h5')
             print('      weights saved')
             
             print('DONE ', config)

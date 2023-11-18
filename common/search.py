@@ -19,7 +19,7 @@ class ConfigsTester:
         os.mkdir(self.WORKING_DIR + 'history/', mode=0o777)
         os.mkdir(self.WORKING_DIR + 'weights/', mode=0o777)
         
-        self.HP_FILEPATH = self.WORKING_DIR + 'q_hp.csv'
+        self.HP_FILEPATH = self.WORKING_DIR + 'hp.csv'
         with open(self.HP_FILEPATH, 'w', newline='', opener=lambda path, flags: os.open(path, flags, 0o777)) as f:
             hp_file_columns = ['hp_config','time',f'val_{metric}-avg',f'val_{metric}-med',f'val_{metric}-std',f'train_{metric}-max',f'train_{metric}-min']
             csv.writer(f).writerow(hp_file_columns)
@@ -44,7 +44,25 @@ class ConfigsTester:
         with open(self.HP_FILEPATH, 'a', newline='') as f:
             csv.writer(f).writerow([self.get_config_string(config),time.strftime("%H:%M:%S", time.localtime()),np.average(val_metric_tail),np.median(val_metric_tail),np.std(val_metric_tail),np.max(metric_tail),np.min(metric_tail)])
     
-    def test_configs(self, y_data, optimizer_factory, loss, epochs, callbacks=[], verbose=True, x_data_dir = '/host/dissertation/proccessed_data/'):
+    @staticmethod
+    def load_config_json(compile_conf_dir):
+        import json, ast
+        with open(compile_conf_dir + 'config.json') as f:
+            config = json.load(f)
+            config['optimizer'] = ast.literal_eval(config['optimizer'])
+            return config
+    
+    def save_config_json(self, optimizer, loss, epochs, scenario):
+        import json, os
+        with open(self.WORKING_DIR + 'config.json', 'w', newline='', opener=lambda path, flags: os.open(path, flags, 0o777)) as f:
+            # config = {'optimizer': str(model.optimizer.get_config()), 'loss': model.loss, 'epochs': epoch}
+            config = {'optimizer': str(optimizer.get_config()), 'loss': loss, 'epochs': epochs, 'scenario': scenario}
+            f.write(json.dumps(config))
+    
+    def test_configs(self, y_data, optimizer_factory, loss, epochs, scenario = None, callbacks=[], verbose=True, x_data_dir = '/host/dissertation/proccessed_data/'):
+        
+        self.save_config_json(optimizer_factory(), loss, epochs, scenario)
+        
         import cvnn.layers as complex_layers
         from tensorflow.keras.models import Sequential
         for config in self.config_space:

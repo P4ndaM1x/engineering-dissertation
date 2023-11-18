@@ -9,7 +9,7 @@ class AngleError(Loss):
 
 from tensorflow import Tensor
 def convert_to_real_with_angle(z: Tensor) -> Tensor:
-        return tf_math.angle(z)
+    return tf_math.angle(z)
 
 import gc
 from tensorflow.keras.backend import clear_session

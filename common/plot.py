@@ -60,3 +60,22 @@ def plot_metric_history_zoomed(fit_history, metric = 'loss', moving_average_wind
     axes[-1].legend(loc="lower left")
     axes[-1].set_xlabel("epoch no.")
     fig.supylabel(f"{metric} value")
+
+
+def plot_metric_by_parameter(metric, parameter, metric_label='', parameter_label='', statistic='mean', bins=25, ylim=None):
+    from scipy.stats import binned_statistic
+    
+    bin_means, bin_edges, bin_number = binned_statistic(parameter, metric, statistic=statistic, bins=bins)
+    bin_width = (bin_edges[1] - bin_edges[0])
+    bin_centers = bin_edges[1:] - bin_width/2
+
+    plt.figure()
+    plt.plot(parameter, metric, '.', label='metric value')
+    plt.hlines(bin_means, bin_edges[:-1], bin_edges[1:], colors='red', lw=4, label=f'binned {statistic}')
+    plt.xlabel(parameter_label)
+    plt.ylabel(metric_label)
+    plt.grid(linestyle='--', linewidth=0.5) # axis='y', 
+    if ylim:
+        plt.ylim(ylim)
+    plt.legend()
+    

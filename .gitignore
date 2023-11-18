@@ -1,5 +1,6 @@
 /proccessed_data/*
 !proccessed_data/particles_bundler.ipynb
+!proccessed_data/exploration.ipynb
 
 /trained_models/*
 !/trained_models/hp_file_extractor.ipynb

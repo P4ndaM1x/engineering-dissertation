@@ -3,7 +3,7 @@
 !proccessed_data/exploration.ipynb
 
 /trained_models/*
-!/trained_models/hp_file_extractor.ipynb
+!/trained_models/hp_extractor.ipynb
 
 /externals/
 /keras_tuner/

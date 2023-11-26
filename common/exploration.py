@@ -1,42 +1,73 @@
 import numpy as np
+import scipy.stats as sc
 import matplotlib.pyplot as plt
 import matplotlib.ticker as tick
 
-def print_basic_stats(dataframe, label, use_scientific_notation = False):
-    values = np.asarray(dataframe[label])
+def print_advanced_stats(dataframe, label, use_scientific_notation = False):
+    values = dataframe[label].to_numpy()
     print(f'--- {label} stats ---')
     if use_scientific_notation:
-        print(f'min({label}): {np.min(values):.5e}')
-        print(f'max({label}): {np.max(values):.5e}')
-        print(f'avg({label}): {np.average(values):.5e}')
-        print(f'med({label}): {np.median(values):.5e}')
+        print(f'min({label}):      {np.min(values):.5e}')
+        print(f'max({label}):      {np.max(values):.5e}')
+        print(f'med({label}):      {np.median(values):.5e}')
+        print(f'std({label}):      {np.std(values):.5e}')
+        print(f'kurtosis({label}): {sc.kurtosis(values):.5e}')
+        print(f'skew({label}):     {sc.skew(values):.5e}')
     else:
-        print(f'min({label}): {np.min(values)}')
-        print(f'max({label}): {np.max(values)}')
-        print(f'avg({label}): {np.average(values)}')
-        print(f'med({label}): {np.median(values)}')
+        print(f'min({label}):      {np.min(values)}')
+        print(f'max({label}):      {np.max(values)}')
+        print(f'med({label}):      {np.median(values)}')
+        print(f'std({label}):      {np.std(values)}')
+        print(f'kurtosis({label}): {sc.kurtosis(values)}')
+        print(f'skew({label}):     {sc.skew(values)}')
+        
+def print_multiple_advanced_stats(dataframe, labels):
+    # print('label & minimum & maksimum & mediana & odchylenie standardowe & kurtoza & współczynnik skośności')
+    # for label in labels:
+    #     values = dataframe[label].to_numpy()
+    #     print(f'{label} & {np.min(values):.2f} & {np.max(values):.2f} & {np.median(values):.5f} & {np.std(values):.2f} & {sc.kurtosis(values):.2f} & {sc.skew(values):.2e} \\\ ')
+    print('współrzędna & mediana & odchylenie standardowe & kurtoza & współczynnik skośności \\\ ')
+    for label in labels:
+        values = dataframe[label].to_numpy()
+        print(f'{label} & {np.median(values):.2f} & {np.std(values):.1f} & {sc.kurtosis(values):.2f} & {sc.skew(values):.2e} \\\ ')
+    
 
-def plot_histogram(dataframe, label):
-    plt.figure()
+def plot_histogram(dataframe, label, bins=20, dpi=100):
     values = dataframe[label]
-    plt.hist(values, edgecolor = 'black', weights=np.ones(len(values)) / len(values))
-    plt.gca().yaxis.set_major_formatter(tick.PercentFormatter(1))
-    plt.xlabel(f'{label} values')
-    plt.ylabel('occurrences percentage')
-    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+    fig, ax1 = plt.subplots()
+    fig.set_dpi(dpi)
+     
+    ax1.hist(values, edgecolor = 'black', weights=np.ones(len(values)) / len(values), alpha=1, lw=0.5, bins=bins)
+    ax1.yaxis.set_major_formatter(tick.PercentFormatter(1))
+    ax1.set_xlabel(f'{label} value')
+    ax1.set_ylabel('occurrences percentage')
+    ax1.grid(axis='y', linestyle='--', linewidth=0.5)
+    
+    ax2 = ax1.twinx() 
+    ax2.hist(values, bins=bins, alpha=0)
+    ax2.set_ylabel('occurrences count')
     plt.show()
     
-def plot_multiple_histograms(dataframe, labels, range=None):
-    plt.figure()
+def plot_multiple_histograms(dataframe, labels, xlabel=None, range=None, dpi=100):
     values = dataframe[labels]
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    fig.set_dpi(dpi)
+
     if range is None:
-        plt.hist(values, edgecolor = 'black', histtype='bar', weights=np.ones((len(values), len(labels))) / len(values), label=labels)
+        ax1.hist(values, edgecolor = 'black', lw=0.5, histtype='bar', label=labels, weights=np.ones((len(values), len(labels))) / len(values))
+        ax2.hist(values, edgecolor = 'black', lw=0.5, histtype='bar', label=labels, alpha=1)
     else:
-        plt.hist(values, edgecolor = 'black', histtype='bar', weights=np.ones((len(values), len(labels))) / len(values), label=labels, range=range)
-    plt.gca().yaxis.set_major_formatter(tick.PercentFormatter(1))
-    plt.legend()
-    plt.ylabel('occurrences percentage')
-    plt.grid(axis='y', linestyle='--', linewidth=0.5)
+        ax1.hist(values, edgecolor = 'black', lw=0.5, histtype='bar', label=labels, weights=np.ones((len(values), len(labels))) / len(values), range=range)
+        ax2.hist(values, edgecolor = 'black', lw=0.5, histtype='bar', label=labels, alpha=1, range=range)
+    ax1.yaxis.set_major_formatter(tick.PercentFormatter(1))
+    ax1.set_xlabel(xlabel)
+    ax1.set_ylabel('occurrences percentage')
+    ax2.set_ylabel('occurrences count')
+    ax1.grid(axis='y', linestyle='--', linewidth=0.5)
+    ax2.grid(axis='y', linestyle='--', linewidth=0.5)
+    ax1.legend()
+    ax2.legend()
     plt.show()
 
 def get_count(data):

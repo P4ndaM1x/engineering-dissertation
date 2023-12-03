@@ -4,28 +4,29 @@ import matplotlib.pyplot as plt
 
 from common.utils import make_dataframe, moving_average, validation_set, train_set
 
-def plot_metric_history(fit_history, metric = 'loss', moving_average_window = (10,), title = None):
+def plot_metric_history(fit_history, metric = 'loss', moving_average_window = (20,), ylim=None, hline=None, legend_loc = 'upper right', title = None, figsize=[8,4], dpi=100):
     
     if isinstance(fit_history, pd.core.frame.DataFrame):
         df = fit_history
     else:
         df = make_dataframe(fit_history)
     
-    plt.figure()
+    plt.figure(dpi=dpi, figsize=figsize)
     
-    plt.plot(df['epoch'], df[metric], label=f'training set {metric}')
-    plt.plot(df['epoch'], df[f'val_{metric}'], linestyle='dotted', linewidth=0.5, label=f'validation set {metric}')
+    plt.plot(df['epoch'], df[metric], label=f'training set')
+    plt.plot(df['epoch'], df[f'val_{metric}'], linestyle='dotted', linewidth=0.5, label=f'validation set')
     if moving_average_window is not None:
         for w in moving_average_window:
-            plt.plot(df['epoch'][w-1:], moving_average(df[f'val_{metric}'], w), linestyle='dashed', label=f'validation set {metric} moving average, w={w}')
-    
-    if title is None:
-        plt.title(f'{metric} history')
-    else:
+            plt.plot(df['epoch'][w-1:], moving_average(df[f'val_{metric}'], w), linestyle=(0, (1, 1)), label=f'validation set - moving average, $w={w}$')
+    if hline:
+        plt.axhline(y=hline, color='grey', alpha=0.5, linestyle=(0, (1, 1)), label=f'{metric}$ = 0.005$')
+    if title:
         plt.title(title)
+    if ylim:
+        plt.ylim(ylim)
     plt.ylabel(f'{metric} value')
     plt.xlabel('epoch no.')
-    plt.legend()
+    plt.legend(loc=legend_loc)
     plt.show()
 
 
@@ -50,7 +51,8 @@ def plot_metric_history_zoomed(fit_history, metric = 'loss', mode = 'min', max =
         threshold = np.minimum(train_99th_percentile, val_99th_percentile)
     
     if subplots < 3:
-        fig, axes = plt.subplots(2, sharex=True, figsize=(8,6),  gridspec_kw={'height_ratios': [1, 2]}, constrained_layout=True)
+        height_ratios = [2, 1] if  mode == 'min' else [1, 2]
+        fig, axes = plt.subplots(2, sharex=True, figsize=(8,6),  gridspec_kw={'height_ratios': height_ratios}, constrained_layout=True)
     else:
         fig, axes = plt.subplots(subplots, sharex=True, figsize=(8,6), constrained_layout=True)
     fig.set_dpi(dpi)
@@ -72,8 +74,10 @@ def plot_metric_history_zoomed(fit_history, metric = 'loss', mode = 'min', max =
         else:
             axis.set_ylim((threshold_multiplier*threshold, max))
             threshold_multiplier /= 1.2
-    if legend_loc:
+    if 'lower' in legend_loc:
         axes[-1].legend(loc=legend_loc)
+    if 'upper' in legend_loc:
+        axes[0].legend(loc=legend_loc)
     axes[-1].set_xlabel("epoch no.")
     fig.supylabel(f"{metric} value")
 

@@ -11,7 +11,7 @@ def moving_average(x, w):
 
 def validation_set(data, validation_split = 0.2):
     validation_len = int(validation_split*len(data))
-    return data[-validation_len:]
+    return data[-validation_len-1:]
 
 def train_set(data, validation_split = 0.2):
     train_len = int((1-validation_split)*len(data))

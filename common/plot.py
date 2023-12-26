@@ -1,11 +1,14 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.ticker as tick
 
 from common.utils import make_dataframe, moving_average, validation_set, train_set
 
-def plot_metric_history(fit_history, metric = 'loss', moving_average_window = (20,), ylim=None, hline=None, legend_loc = 'upper right', title = None, figsize=[8,4], dpi=100):
+def plot_metric_history(fit_history, metric = 'loss', moving_average_window = (20,), ylim=None, y_formatter=None, hline=None, hline_label=None, legend_loc = 'upper right', title = None, y_label=None, figsize=[8,4], dpi=100):
     
+    if not hline_label:
+        hline_label = '{y_label}$ = {hline}$'
     if isinstance(fit_history, pd.core.frame.DataFrame):
         df = fit_history
     else:
@@ -19,14 +22,19 @@ def plot_metric_history(fit_history, metric = 'loss', moving_average_window = (2
         for w in moving_average_window:
             plt.plot(df['epoch'][w-1:], moving_average(df[f'val_{metric}'], w), linestyle=(0, (1, 1)), label=f'validation set - moving average, $w={w}$')
     if hline:
-        plt.axhline(y=hline, color='grey', alpha=0.5, linestyle=(0, (1, 1)), label=f'{metric}$ = 0.005$')
+        plt.axhline(y=hline, color='grey', alpha=0.5, linestyle=(0, (1, 1)), label=f'{y_label}$ = {hline}\%$')
     if title:
         plt.title(title)
     if ylim:
         plt.ylim(ylim)
-    plt.ylabel(f'{metric} value')
+    if y_label:
+        plt.ylabel(y_label)
+    else:
+        plt.ylabel(f'{metric} value')
     plt.xlabel('epoch no.')
     plt.legend(loc=legend_loc)
+    if y_formatter:
+        plt.gca().yaxis.set_major_formatter(y_formatter)
     plt.show()
 
 
@@ -73,7 +81,7 @@ def plot_metric_history_zoomed(fit_history, metric = 'loss', mode = 'min', max =
             threshold_multiplier /= 2
         else:
             axis.set_ylim((threshold_multiplier*threshold, max))
-            threshold_multiplier /= 1.2
+            threshold_multiplier /= 1.5
     if 'lower' in legend_loc:
         axes[-1].legend(loc=legend_loc)
     if 'upper' in legend_loc:
@@ -82,22 +90,24 @@ def plot_metric_history_zoomed(fit_history, metric = 'loss', mode = 'min', max =
     fig.supylabel(f"{metric} value")
 
 
-def plot_loss_by_parameter(loss, parameter, loss_label='', parameter_label='', statistic='mean', bins=25, ylim=None):
+def plot_loss_by_parameter(loss, parameter, loss_label='', parameter_label='', statistic='mean', bins=25, color='#1f77b4', legend_loc='best', point_label='loss value', ylim=None, dpi=100):
     from scipy.stats import binned_statistic
     
     bin_means, bin_edges, bin_number = binned_statistic(parameter, loss, statistic=statistic, bins=bins)
     bin_width = (bin_edges[1] - bin_edges[0])
     bin_centers = bin_edges[1:] - bin_width/2
 
-    plt.figure()
-    plt.plot(parameter, loss, '.', label='loss value', alpha=0.5)
-    plt.hlines(bin_means, bin_edges[:-1], bin_edges[1:], colors='red', lw=4, label=f'binned {statistic}')
+    plt.figure(dpi=dpi)
+    plt.plot(parameter, loss, '.', label=point_label, alpha=0.5, color=color)
+    plt.hlines(bin_means, bin_edges[:-1], bin_edges[1:], colors='black', lw=4, label=f'binned {statistic}')
     plt.xlabel(parameter_label)
     plt.ylabel(loss_label)
     plt.grid(linestyle='--', linewidth=0.5) # axis='y', 
     if ylim:
         plt.ylim(ylim)
-    plt.legend()
+    xmin, xmax, ymin, ymax = plt.axis()
+    print('ylim:', ymin, ymax)
+    plt.legend(loc=legend_loc)
 
 
 def plot_steps_by_parameter(model, x_data, y_data, parameter, metric_func, metric_label='', parameter_label='', bins=25, ylim=None, show_train=True, show_val=True, dpi=100):

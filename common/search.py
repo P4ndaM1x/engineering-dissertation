@@ -60,7 +60,7 @@ class ConfigsTester:
             f.write(json.dumps(config))
     
     def test_configs(self, y_data, optimizer_factory, loss, epochs, scenario = None, callbacks=[], verbose=True, x_data_dir = '/host/dissertation/proccessed_data/'):
-        
+         
         self.save_config_json(optimizer_factory(), loss, epochs, scenario)
         
         import cvnn.layers as complex_layers
@@ -72,7 +72,8 @@ class ConfigsTester:
             model.add(complex_layers.ComplexInput(input_shape=(config[self.param['spacepoints_number']],)))
             for layer_no in range(config[self.param['hidden_layers']]):
                 model.add(complex_layers.ComplexDense(units=config[self.param['neurons_num']], activation=config[self.param['hidden_activation_func']]))
-            model.add(complex_layers.ComplexDense(units=np.shape(y_data)[-1], activation=config[self.param['output_activation_func']]))
+            model.add(complex_layers.ComplexDense(units=len(np.shape(y_data)), activation=config[self.param['output_activation_func']]))
+            print('output layer units:', len(np.shape(y_data)))
             if self.metric != 'loss':
                 model.compile(optimizer=optimizer_factory(), loss=loss, metrics=[self.metric])
             else:
